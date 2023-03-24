@@ -1,8 +1,9 @@
+
 // Import libraries
+#include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPClient.h>
-#include <ArduinoJson.h>
 
 // Init WiFi and HTTO
 WiFiClient wifiClient;
@@ -84,9 +85,11 @@ void act() {
   int digital_pin = digital_arg.toInt();
   bool state = state_arg.toInt() == 1;
 
+  pinMode(digital_pin, OUTPUT);
   digitalWrite(digital_pin, state);
 
-  String message = digital_arg + " - " + state_arg;
+  Serial.println(String(digital_pin));
+  Serial.println(String(state));
 
   DynamicJsonDocument doc(1024);
 
@@ -94,8 +97,6 @@ void act() {
 
   String json;
   serializeJson(doc, json);
-
-  Serial.println(message);
 
   server.send(200, "application/json", json);
 }
