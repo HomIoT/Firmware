@@ -1,13 +1,16 @@
 
 // Import libraries
+#include <Wire.h>
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPClient.h>
+#include <LiquidCrystal_I2C.h>
 
 // Init WiFi and HTTO
 WiFiClient wifiClient;
 HTTPClient httpClient;
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 // WiFi Cerditionals
 String ssid = "Apple";
@@ -93,7 +96,7 @@ void act() {
 
   DynamicJsonDocument doc(1024);
 
-  doc["message"] = message;
+  doc["message"] = "System updated";
 
   String json;
   serializeJson(doc, json);
@@ -102,19 +105,28 @@ void act() {
 }
 
 void setup() {
-  // Start Serial
-  Serial.begin(9600);
+  lcd.init();                  // Init LCD
+  Serial.begin(9600);          // Init Serial
+  WiFi.begin(ssid, password);  // Init WiFi
 
-  // Setup WiFi connection
-  WiFi.begin(ssid, password);
+  lcd.backlight();  // Turn the LCD on
 
   // Check WiFi is connection
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
-    Serial.println("Connecting to WiFi...");
+
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Connecting . . .");
   }
 
-  Serial.println("IP: " + WiFi.localIP().toString());
+  lcd.clear();
+
+  lcd.setCursor(0, 0);
+  lcd.print("Server started");
+
+  lcd.setCursor(0, 1);
+  lcd.print(WiFi.localIP().toString());
 
   // Return that Wifi started
   Serial.println("Connected to WiFi");
