@@ -1,22 +1,29 @@
+// Import libraries
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPClient.h>
 #include <ArduinoJson.h>
 
+// Init WiFi and HTTO
 WiFiClient wifiClient;
 HTTPClient httpClient;
 
+// WiFi Cerditionals
 String ssid = "Apple";
 String password = "";
 
-int roofLED = 1;
-
 String baseUrl = "http://192.168.50.4:5000/api";
 
+// Start Web Server on port 80
 ESP8266WebServer server(80);
 
-void sayHi()
-{
+// Sample controller
+void sayHi() {
+  if (server.method() != HTTP_GET) {
+    server.send(405, "text/plain", "Method Not Allowed");
+    return;
+  }
+
   DynamicJsonDocument doc(1024);
 
   doc["message"] = "Hi";
@@ -27,8 +34,12 @@ void sayHi()
   server.send(200, "application/json", json);
 }
 
-void predict()
-{
+void predict() {
+  if (server.method() != HTTP_GET) {
+    server.send(405, "text/plain", "Method Not Allowed");
+    return;
+  }
+
   httpClient.setURL(baseUrl + "/predict");
 
   DynamicJsonDocument doc(1024);
@@ -49,8 +60,8 @@ void predict()
   httpClient.end();
 }
 
-void handleNotFound()
-{
+// Handle not found controller
+void handleNotFound() {
   DynamicJsonDocument doc(1024);
 
   doc["message"] = "Not found";
@@ -61,12 +72,35 @@ void handleNotFound()
   server.send(404, "application/json", json);
 }
 
-void system()
-{
+void act() {
+  if (server.method() != HTTP_GET) {
+    server.send(405, "text/plain", "Method Not Allowed");
+    return;
+  }
+
+  String digital_arg = server.arg("digital");
+  String state_arg = server.arg("state");
+
+  int digital_pin = digital_arg.toInt();
+  bool state = state_arg.toInt() == 1;
+
+  digitalWrite(digital_pin, state);
+
+  String message = digital_arg + " - " + state_arg;
+
+  DynamicJsonDocument doc(1024);
+
+  doc["message"] = message;
+
+  String json;
+  serializeJson(doc, json);
+
+  Serial.println(message);
+
+  server.send(200, "application/json", json);
 }
 
-void setup()
-{
+void setup() {
   // Start Serial
   Serial.begin(9600);
 
@@ -74,11 +108,12 @@ void setup()
   WiFi.begin(ssid, password);
 
   // Check WiFi is connection
-  while (WiFi.status() != WL_CONNECTED)
-  {
+  while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.println("Connecting to WiFi...");
   }
+
+  Serial.println("IP: " + WiFi.localIP().toString());
 
   // Return that Wifi started
   Serial.println("Connected to WiFi");
@@ -89,7 +124,7 @@ void setup()
   // API routes
   server.on("/api", sayHi);
   server.on("/api/predict", predict);
-  server.on("/api/system", system);
+  server.on("/api/act", act);
   server.onNotFound(handleNotFound);
 
   // Setup server
@@ -99,7 +134,7 @@ void setup()
   Serial.println("Server started");
 }
 
-void loop()
-{
+void loop() {
+  // Start to handle
   server.handleClient();
 }
