@@ -16,6 +16,12 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 String ssid = "Apple";
 String password = "";
 
+// LED digitals
+// int white = 16;
+// int blue = 15
+int green = 14;
+int red = 13;
+
 String baseUrl = "http://192.168.50.4:5000/api";
 
 // Start Web Server on port 80
@@ -111,13 +117,24 @@ void setup() {
 
   lcd.backlight();  // Turn the LCD on
 
+  // pinMode(white, OUTPUT);
+  // pinMode(blue, OUTPUT);
+  pinMode(green, OUTPUT);
+  pinMode(red, OUTPUT);
+
   // Check WiFi is connection
   while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-
     lcd.clear();
     lcd.setCursor(0, 0);
+
+    digitalWrite(red, HIGH);
+    Serial.println("Connecting . . .");
     lcd.print("Connecting . . .");
+
+    delay(500);
+
+    digitalWrite(red, LOW);
+    delay(500);
   }
 
   lcd.clear();
@@ -145,6 +162,10 @@ void setup() {
 
   // Return that server started
   Serial.println("Server started");
+
+  // Connected
+  Serial.println("Connected.");
+  digitalWrite(green, HIGH);
 }
 
 void loop() {
